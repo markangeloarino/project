@@ -1,0 +1,43 @@
+import 'package:flutter/material.dart';
+import 'package:neis_cap/admin_provider.dart';
+import 'package:neis_cap/screen_staff_login.dart';
+import 'package:neis_cap/Frontend-jobseeker/screen_dashboard.dart';
+import 'package:neis_cap/screen_login.dart';
+import 'package:neis_cap/screen_singup.dart';
+import 'package:neis_cap/Frontend-jobpoting/screen_staff_dashboard.dart';
+import 'package:neis_cap/Frontend-jobpoting/vacancy_provider.dart';
+import 'package:neis_cap/screen_home.dart';
+import 'package:provider/provider.dart';
+
+import 'auth_provider.dart'; 
+
+void main() {
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => VacancyProvider()), // Add this line
+        ChangeNotifierProvider(create: (_) => AdminProvider())
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'NEIS',
+      theme: ThemeData( 
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+      ),
+      // Set the Staff Dashboard as your temporary home screen to test it!
+      home: const ScreenHome(), 
+    );
+  }
+}
+
+//  node server.js
