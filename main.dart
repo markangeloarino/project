@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:neis_cap/Frontend-jobmatching/matching_dashboard.dart';
+import 'package:neis_cap/Frontend-jobposting/post_vacancy.dart';
 import 'package:neis_cap/admin_provider.dart';
 import 'package:neis_cap/screen_staff_login.dart';
-import 'package:neis_cap/Frontend-jobseeker/screen_dashboard.dart';
+import 'package:neis_cap/Frontend-jobseeker/seeker_dashboard.dart';
 import 'package:neis_cap/screen_login.dart';
-import 'package:neis_cap/screen_singup.dart';
-import 'package:neis_cap/Frontend-jobpoting/screen_staff_dashboard.dart';
-import 'package:neis_cap/Frontend-jobpoting/vacancy_provider.dart';
-import 'package:neis_cap/screen_home.dart';
+import 'package:neis_cap/screen_singup.dart'; 
+import 'package:neis_cap/Frontend-jobposting/post_vacancy_provider.dart';
+import 'package:neis_cap/screen_job.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_provider.dart'; 
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp(   
       title: 'NEIS',
       theme: ThemeData( 
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),

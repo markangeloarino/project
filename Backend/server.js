@@ -125,7 +125,8 @@ app.put('/api/vacancies/:id', async (req, res) => {
     const { 
         job_title, employer_name, years_experience, salary, 
         vacancies_count, employment_type, industry, location, 
-        job_description, qualifications, application_deadline, job_location_type 
+        job_description, qualifications, application_deadline, job_location_type,
+        status, employer_career_link // NEW: Added link field
     } = req.body;
 
     let conn;
@@ -135,14 +136,15 @@ app.put('/api/vacancies/:id', async (req, res) => {
             UPDATE job_vacancies SET 
             job_title = ?, employer_name = ?, years_experience = ?, salary = ?, 
             vacancies_count = ?, employment_type = ?, industry = ?, location = ?, 
-            job_description = ?, qualifications = ?, application_deadline = ?, job_location_type = ?
+            job_description = ?, qualifications = ?, application_deadline = ?, job_location_type = ?,
+            status = ?, employer_career_link = ? 
             WHERE vacancy_id = ?
         `;
         const values = [
             job_title, employer_name, years_experience, salary, 
             vacancies_count, employment_type, industry, location, 
             job_description, qualifications, application_deadline, job_location_type, 
-            vacancyId
+            status, employer_career_link || null, vacancyId // NEW: Update link
         ];
         
         await conn.query(query, values);
@@ -183,49 +185,18 @@ app.delete('/api/vacancies/:id', async (req, res) => {
 
 
 
-// POST: Encode a new job vacancy (Assisted Entry)
-app.post('/api/vacancies', async (req, res) => {
-    const { 
-        job_title, employer_name, years_experience, salary, 
-        vacancies_count, employment_type, industry, location, 
-        job_description, qualifications, application_deadline, job_location_type 
-    } = req.body;
-
-    if (!job_title || !employer_name) {
-        return res.status(400).json({ error: "Job title and Employer name are required." });
-    }
-
-    let conn;
-    try {
-        conn = await pool.getConnection();
-        const query = `
-            INSERT INTO job_vacancies 
-            (job_title, employer_name, years_experience, salary, vacancies_count, employment_type, industry, location, job_description, qualifications, application_deadline, job_location_type) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        const values = [
-            job_title, employer_name, years_experience || 0, salary || 'Not specified', 
-            vacancies_count || 1, employment_type || 'Full-time', industry || '', 
-            location || '', job_description || '', qualifications || '', 
-            application_deadline || null, job_location_type || 'Local'
-        ];
-        
-        const result = await conn.query(query, values);
-        res.status(201).json({ message: "Job encoded successfully!", vacancyId: result.insertId.toString() });
-    } catch (err) {
-        res.status(500).json({ error: "Database error: " + err.message });
-    } finally {
-        if (conn) conn.release();
-    }
-});
-
+ 
 // ==========================================
 // MODULE 1: EMPLOYER
 // ==========================================
 
 // POST: Register a new Employer (Metro PESO Staff)
 app.post('/api/employers', async (req, res) => {
-    const { company_name, industry, website, contact_person, email, phone, address, logo_url, status } = req.body;
+    const { 
+        company_name, industry, website, contact_person, 
+        email, phone, address, logo_url, status,
+        company_description // NEW: Added company description
+    } = req.body;
 
     if (!company_name || !industry || !contact_person || !email) {
         return res.status(400).json({ error: "Missing required employer fields." });
@@ -235,8 +206,12 @@ app.post('/api/employers', async (req, res) => {
     try {
         conn = await pool.getConnection();
         const result = await conn.query(
-            "INSERT INTO employers (company_name, industry, website, contact_person, email, phone, address, logo_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [company_name, industry, website || null, contact_person, email, phone, address, logo_url || null, status || 'Active']
+            "INSERT INTO employers (company_name, industry, website, contact_person, email, phone, address, logo_url, status, company_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                company_name, industry, website || null, contact_person, 
+                email, phone, address, logo_url || null, status || 'Active',
+                company_description || '' // NEW: Passed to query
+            ]
         );
         res.status(201).json({ message: "Employer registered successfully!" });
     } catch (err) {
@@ -245,6 +220,68 @@ app.post('/api/employers', async (req, res) => {
         } else {
             res.status(500).json({ error: "Database error: " + err.message });
         }
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+// PUT: Update an existing Employer
+app.put('/api/employers/:id', async (req, res) => {
+    const employerId = req.params.id;
+    const { 
+        company_name, industry, website, contact_person, 
+        email, phone, address, logo_url, status, company_description 
+    } = req.body;
+
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const query = `
+            UPDATE employers SET 
+            company_name = ?, industry = ?, website = ?, contact_person = ?, 
+            email = ?, phone = ?, address = ?, logo_url = ?, status = ?, company_description = ?
+            WHERE employer_id = ?
+        `;
+        await conn.query(query, [
+            company_name, industry, website || null, contact_person, 
+            email, phone, address, logo_url || null, status || 'Active', 
+            company_description || '', employerId
+        ]);
+        res.status(200).json({ message: "Employer updated successfully!" });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to update employer: " + err.message });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+// DELETE: Remove an Employer (With Validation Check)
+app.delete('/api/employers/:id', async (req, res) => {
+    const employerId = req.params.id;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        
+        // 1. Get the employer's company name first
+        const empRows = await conn.query("SELECT company_name FROM employers WHERE employer_id = ?", [employerId]);
+        if (empRows.length === 0) {
+            return res.status(404).json({ error: "Employer not found." });
+        }
+        const companyName = empRows[0].company_name;
+
+        // 2. Check if they have any existing job postings
+        const jobRows = await conn.query("SELECT COUNT(*) as count FROM job_vacancies WHERE employer_name = ?", [companyName]);
+        
+        if (jobRows[0].count > 0) {
+            // Block deletion if jobs exist
+            return res.status(400).json({ error: "Cannot delete this employer because they have existing job postings. Close or delete their jobs first." });
+        }
+
+        // 3. Safe to delete
+        await conn.query("DELETE FROM employers WHERE employer_id = ?", [employerId]);
+        res.status(200).json({ message: "Employer successfully deleted." });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to delete employer: " + err.message });
     } finally {
         if (conn) conn.release();
     }
@@ -428,26 +465,44 @@ app.get('/api/vacancies', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); } finally { if (conn) conn.release(); }
 });
 
+// POST: Encode a new job vacancy (Assisted Entry)
 app.post('/api/vacancies', async (req, res) => {
-    const { job_title, employer_name, years_experience, salary, vacancies_count, employment_type, industry, location, job_description, qualifications, application_deadline, job_location_type } = req.body;
+    const { 
+        job_title, employer_name, years_experience, salary, 
+        vacancies_count, employment_type, industry, location, 
+        job_description, qualifications, application_deadline, job_location_type,
+        status, employer_career_link // NEW: Added link field
+    } = req.body;
+
+    if (!job_title || !employer_name) {
+        return res.status(400).json({ error: "Job title and Employer name are required." });
+    }
+
     let conn;
     try {
         conn = await pool.getConnection();
-        const query = `INSERT INTO job_vacancies (job_title, employer_name, encoded_by_staff_id, years_experience, salary, vacancies_count, employment_type, industry, location, job_description, qualifications, application_deadline, job_location_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const values = [job_title, employer_name, 1, years_experience || 0, salary || 'Not specified', vacancies_count || 1, employment_type || 'Full-time', industry || '', location || '', job_description || '', qualifications || '', application_deadline || null, job_location_type || 'Local'];
-        await conn.query(query, values);
-        res.status(201).json({ message: "Job encoded successfully!" });
-    } catch (err) { res.status(500).json({ error: err.message }); } finally { if (conn) conn.release(); }
+        const query = `
+            INSERT INTO job_vacancies 
+            (job_title, employer_name, encoded_by_staff_id, years_experience, salary, vacancies_count, employment_type, industry, location, job_description, qualifications, application_deadline, job_location_type, status, employer_career_link) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        const values = [
+            job_title, employer_name, 1, years_experience || 0, salary || 'Not specified', 
+            vacancies_count || 1, employment_type || 'Full-time', industry || '', 
+            location || '', job_description || '', qualifications || '', 
+            application_deadline || null, job_location_type || 'Local', 
+            status || 'Active', employer_career_link || null // NEW: Insert link
+        ];
+        
+        const result = await conn.query(query, values);
+        res.status(201).json({ message: "Job encoded successfully!", vacancyId: result.insertId.toString() });
+    } catch (err) {
+        res.status(500).json({ error: "Database error: " + err.message });
+    } finally {
+        if (conn) conn.release();
+    }
 });
 
-app.put('/api/vacancies/:id', async (req, res) => { /* Exists in your original */ });
-app.delete('/api/vacancies/:id', async (req, res) => { /* Exists in your original */ });
-app.get('/api/employers', async (req, res) => { /* Exists in your original */ });
-app.post('/api/employers', async (req, res) => { /* Exists in your original */ });
-app.post('/api/applications', async (req, res) => { /* Exists in your original */ });
-app.get('/api/applications/seeker/:id', async (req, res) => { /* Exists in your original */ });
-
- 
 
 // POST: Admin/Staff Login
 app.post('/api/staff/login', async (req, res) => {
@@ -474,9 +529,7 @@ app.post('/api/staff/login', async (req, res) => {
     }
 });
 
-// ===================================
-// ADMIN
-// ===================================
+ 
 
 
 const crypto = require('crypto'); // Add this at the top of server.js with your other requires

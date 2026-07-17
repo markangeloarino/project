@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:neis_cap/screen_home.dart';
+import 'package:neis_cap/Frontend-jobseeker/seeker_dashboard.dart';
+import 'package:neis_cap/screen_job.dart';
 import 'package:neis_cap/screen_login.dart';
 import 'package:provider/provider.dart';
 import 'package:neis_cap/auth_provider.dart';
@@ -36,7 +37,7 @@ class _ScreenSignupState extends State<ScreenSignup> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  "Create an Account",
+                  "Sing Up",
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -99,26 +100,90 @@ class _ScreenSignupState extends State<ScreenSignup> {
                           foregroundColor: Colors.white,
                         ),
                         onPressed: () async {
-                          bool success = await context
-                              .read<AuthProvider>()
-                              .register(
-                                _firstController.text,
-                                _lastController.text,
-                                _emailController.text,
-                                _passwordController.text,
-                              );
+                          // 1. Clean the text inputs
+                          final String firstName = _firstController.text.trim();
+                          final String lastName = _lastController.text.trim();
+                          final String email = _emailController.text.trim();
+                          final String password = _passwordController.text
+                              .trim();
 
-                          if (!mounted) return;
-
-                          if (success) {
+                          // 2. Validate empty fields
+                          if (firstName.isEmpty ||
+                              lastName.isEmpty ||
+                              email.isEmpty ||
+                              password.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
-                                  "Registration Successful! Please login.",
+                                  "Please fill in all fields before registering.",
                                 ),
+                                backgroundColor: Colors.red,
                               ),
                             );
-                            Navigator.pop(context);
+                            return; // Stop execution
+                          }
+
+                          final authProvider = context.read<AuthProvider>();
+
+                          // 3. Attempt to Register
+                          bool registerSuccess = await authProvider.register(
+                            firstName,
+                            lastName,
+                            email,
+                            password,
+                          );
+
+                          if (!mounted) return;
+
+                          if (registerSuccess) {
+                            // 4. Registration successful! Immediately log them in
+                            bool loginSuccess = await authProvider.login(
+                              email,
+                              password,
+                            );
+
+                            if (!mounted) return;
+
+                            if (loginSuccess) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Welcome, $firstName!"),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+
+                              // 5. Navigate directly to the Seeker Dashboard, clearing the navigation stack
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ScreenSeekerDashboard(),
+                                ),
+                                (route) =>
+                                    false, // Prevents the user from clicking the "Back" button to return to the signup page
+                              );
+                            } else {
+                              // Fallback in case automatic login fails
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Registration successful. Please login.",
+                                  ),
+                                ),
+                              );
+                              Navigator.pop(context); // Go back to login screen
+                            }
+                          } else {
+                            // Show backend errors (like "Duplicate Email")
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  authProvider.errorMessage ??
+                                      "Registration failed.",
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
                           }
                         },
                         child: const Text("Register"),
@@ -178,7 +243,6 @@ class _ScreenSignupState extends State<ScreenSignup> {
               // Nav Links
               _buildNavLink(
                 "Home",
-                isActive: true,
                 () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ScreenHome()),

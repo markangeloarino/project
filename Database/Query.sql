@@ -89,3 +89,18 @@ INSERT INTO peso_staff (name, email, password_hash, role)
 VALUES 
 ('System Admin', 'admin@naga.gov.ph', '$2b$10$X7.mQ3R8bH5wzH6g5vU7ouJ.3v3Z7Z5Z7Z5Z7Z5Z7Z5Z7Z5Z7Z5Z7', 'Admin'),
 ('Mediated Entry Officer', 'staff@naga.gov.ph', '$2b$10$X7.mQ3R8bH5wzH6g5vU7ouJ.3v3Z7Z5Z7Z5Z7Z5Z7Z5Z7Z5Z7Z5Z7', 'Staff');
+
+
+ALTER TABLE job_vacancies
+ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';
+
+ALTER TABLE employers
+ADD COLUMN IF NOT EXISTS company_description TEXT;
+
+
+ALTER TABLE job_vacancies
+ADD COLUMN IF NOT EXISTS employer_career_link VARCHAR(255);
+
+UPDATE peso_staff SET role = 'Job Poster' WHERE role = 'Staff';
+-- Or you can change individual records:
+UPDATE peso_staff SET role = 'Job Matcher' WHERE email = 'some_staff@naga.gov.ph';
