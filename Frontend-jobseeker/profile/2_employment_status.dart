@@ -15,36 +15,21 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
   String _employedCategory = "Employed";
   // "Employed" or "Self-Employed"
   String _selfEmployedType = "";
-
   final TextEditingController _selfEmployedOthersCtrl = TextEditingController();
-
   final TextEditingController _monthsLookingCtrl = TextEditingController();
-
   String _unemployedReason = "";
-
   final TextEditingController _unemployedCountryCtrl = TextEditingController();
-
   final TextEditingController _unemployedOthersCtrl = TextEditingController();
-
   String _isOfw = "No";
-
   final TextEditingController _ofwCountryCtrl = TextEditingController();
-
   String _isFormerOfw = "No";
-
   final TextEditingController _formerOfwCountryCtrl = TextEditingController();
-
   final TextEditingController _formerOfwReturnCtrl = TextEditingController();
-
   String _hasOfwFamily = "No";
-
   String _ofwFamilyMember = "";
-
   final TextEditingController _ofwFamilyCountryCtrl = TextEditingController();
-
   String _is4ps = "No";
-
-  final TextEditingController _4psIdCtrl = TextEditingController();
+  final TextEditingController _fourpsIdCtrl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -56,14 +41,14 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // LEFT COLUMN: EMPLOYED
-            Expanded(
+            Expanded( 
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: _mainEmploymentStatus == "Employed"
-                        ? Colors.blue
-                        : Colors.grey.shade300,
+                        ? Colors.grey.shade300
+                        : Colors.white,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -171,8 +156,8 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: _mainEmploymentStatus == "Unemployed"
-                        ? Colors.red
-                        : Colors.grey.shade300,
+                        ? Colors.grey.shade300
+                        : Colors.white,
                     width: 2,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -280,6 +265,7 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
 
         // --- OFW SECTION ---
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Column(
@@ -438,30 +424,61 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
         if (_is4ps == "Yes") ...[
           const SizedBox(height: 10),
           _buildLabel("If yes, please provide Household ID No."),
-          _buildGreyTextFieldController(_4psIdCtrl, isNumber: true),
+          _buildGreyTextFieldController(_fourpsIdCtrl, isNumber: true),
         ],
 
         const SizedBox(height: 40),
 
-        // --- SAVE BUTTON ---
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1D3A8A),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        // ====================================
+        // BOTTOM BUTTON
+        // ====================================
+        const SizedBox(height: 40),
+        const Divider(color: Colors.black12, thickness: 1),
+        const SizedBox(height: 16),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton(
+              onPressed: () {
+                // Handle Back Action
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF3B82F6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(color: Color(0xFF3B82F6)),
+              ),
             ),
-            onPressed: () {
-              // Your Save Logic Here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Employment Status Saved!")),
-              );
-            },
-            child: const Text(
-              "Save Changes",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            const SizedBox(width: 16),
+            OutlinedButton(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Training data saved!")),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D3A8A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "SAVE CHANGES",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );

@@ -39,10 +39,9 @@ class _JobPreferencesState extends State<JobPreferences> {
         // ==========================================
         // PART 1: PREFERRED OCCUPATION
         // ==========================================
-        Row(
+        Row( 
           children: [
-            _buildLabel("PREFERRED OCCUPATION"),
-            const Spacer(),
+            _buildLabel("PREFERRED OCCUPATION: "), 
             _buildCheckbox(
               "Part-Time",
               _isPartTime,
@@ -95,7 +94,7 @@ class _JobPreferencesState extends State<JobPreferences> {
         _buildOccupationRow("2.", _jobTitle2Ctrl, _company2Ctrl),
         _buildOccupationRow("3.", _jobTitle3Ctrl, _company3Ctrl),
 
-        const SizedBox(height: 40),
+        const SizedBox(height: 30),
 
         // ==========================================
         // PART 2: PREFERRED WORK LOCATION
@@ -103,56 +102,84 @@ class _JobPreferencesState extends State<JobPreferences> {
         _buildLabel("PREFERRED WORK LOCATION"),
         const Divider(color: Colors.black54, thickness: 1.5),
 
-        // Headers and Checkboxes for Location
-        Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: _buildCheckbox(
-                "Local (specify cities/municipalities)",
-                _isLocal,
-                (v) => setState(() => _isLocal = v!),
-              ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              flex: 1,
-              child: _buildCheckbox(
-                "Overseas (specify countries)",
-                _isOverseas,
-                (v) => setState(() => _isOverseas = v!),
-              ),
-            ),
-          ],
+        // 1. Local (specify cities/municipalities
+        _buildCheckbox(
+          "Local (specify cities/municipalities)",
+          _isLocal,
+          (v) => setState(() => _isLocal = v!),
         ),
         const SizedBox(height: 15),
 
         // Location Rows
-        _buildLocationRow("1.", _local1Ctrl, _overseas1Ctrl),
-        _buildLocationRow("2.", _local2Ctrl, _overseas2Ctrl),
-        _buildLocationRow("3.", _local3Ctrl, _overseas3Ctrl),
+        _buildLocalRow("1.", _local1Ctrl),
+        _buildLocalRow("2.", _local2Ctrl),
+        _buildLocalRow("3.", _local3Ctrl),
+
+        // 2. Overseas (specify countries)
+        _buildCheckbox(
+          "Overseas (specify countries)",
+          _isOverseas,
+          (v) => setState(() => _isOverseas = v!),
+        ),
+        const SizedBox(height: 15),
+
+        // Location Rows
+        _buildOversRow("1.", _overseas1Ctrl),
+        _buildOversRow("2.", _overseas2Ctrl),
+        _buildOversRow("3.", _overseas3Ctrl),
 
         const SizedBox(height: 40),
 
-        // --- SAVE BUTTON ---
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1D3A8A),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+       // ====================================
+        // BOTTOM BUTTON
+        // ====================================
+        const SizedBox(height: 40),
+        const Divider(color: Colors.black12, thickness: 1),
+        const SizedBox(height: 16),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton(
+              onPressed: () {
+                // Handle Back Action
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF3B82F6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(color: Color(0xFF3B82F6)),
+              ),
             ),
-            onPressed: () {
-              // Your Save Logic Here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Job Preferences Saved!")),
-              );
-            },
-            child: const Text(
-              "Save Changes",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            const SizedBox(width: 16),
+            OutlinedButton(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Training data saved!")),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D3A8A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "SAVE CHANGES",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -183,12 +210,8 @@ class _JobPreferencesState extends State<JobPreferences> {
     );
   }
 
-  // Helper for generating the Preferred Work Location rows
-  Widget _buildLocationRow(
-    String numLabel,
-    TextEditingController loc,
-    TextEditingController over,
-  ) {
+  // -- LOCAL --
+  Widget _buildLocalRow(String numLabel, TextEditingController loc) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: Row(
@@ -201,7 +224,24 @@ class _JobPreferencesState extends State<JobPreferences> {
             ),
           ),
           Expanded(flex: 1, child: _buildGreyTextFieldController(loc)),
-          const SizedBox(width: 15),
+        ],
+      ),
+    );
+  }
+
+  // -- OVERSEAS --
+  Widget _buildOversRow(String numLabel, TextEditingController over) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15.0),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 25,
+            child: Text(
+              numLabel,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
           Expanded(flex: 1, child: _buildGreyTextFieldController(over)),
         ],
       ),

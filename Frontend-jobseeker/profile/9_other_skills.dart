@@ -65,22 +65,56 @@ class _OtherSkillsState extends State<OtherSkills> {
           ),
         ),
 
+        // ====================================
+        // BOTTOM BUTTON
+        // ====================================
         const SizedBox(height: 40),
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1D3A8A),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        const Divider(color: Colors.black12, thickness: 1),
+        const SizedBox(height: 16),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton(
+              onPressed: () {
+                // Handle Back Action
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF3B82F6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(color: Color(0xFF3B82F6)),
+              ),
             ),
-            onPressed: () => ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text("Skills saved!"))),
-            child: const Text(
-              "Save Changes",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            const SizedBox(width: 16),
+            OutlinedButton(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Training data saved!")),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D3A8A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "SAVE CHANGES",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );

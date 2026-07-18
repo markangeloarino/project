@@ -9,7 +9,6 @@ class EducationalBackground extends StatefulWidget {
 }
 
 class _EducationalBackgroundState extends State<EducationalBackground> {
-  // --- LANGUAGE/DIALECT PROFICIENCY STATE ---
   // --- EDUCATIONAL BACKGROUND STATE ---
   String _currentlyInSchool = "No";
   String _secondaryType = "K12"; // "Non-K12" or "K12"
@@ -40,23 +39,32 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
   final TextEditingController _gradYearGradCtrl = TextEditingController();
   final TextEditingController _gradLevelCtrl = TextEditingController();
   final TextEditingController _gradYearLastCtrl = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 16),
         // --- HEADER: CURRENTLY IN SCHOOL ---
         Row(
           children: [
-            _buildLabel("Currently in School?"),
-            const SizedBox(width: 20),
+            const Text(
+              "Currently in School?",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 24),
             _buildRadio(
               "YES",
               "Yes",
               _currentlyInSchool,
               (v) => setState(() => _currentlyInSchool = v!),
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 16),
             _buildRadio(
               "NO",
               "No",
@@ -65,133 +73,120 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         const Divider(color: Colors.black54, thickness: 1.5),
+        const SizedBox(height: 8),
 
         // --- TABLE HEADERS ---
-        // Top row of headers
+        // Using a unified Row structure so flex values match the data rows perfectly
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
               flex: 2,
-              child: Center(
-                child: Text(
-                  "LEVEL",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+                child: Center(
+                  child: Text(
+                    "LEVEL",
+                    style: _headerStyle(),
                   ),
                 ),
               ),
             ),
             Expanded(
               flex: 3,
-              child: Center(
-                child: Text(
-                  "NAME OF SCHOOL\n(State in Full / No Acronym)",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                    fontSize: 12,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+                child: Center(
+                  child: Text(
+                    "NAME OF SCHOOL\n(State in Full / No Acronym)",
+                    textAlign: TextAlign.center,
+                    style: _headerStyle(),
                   ),
                 ),
               ),
             ),
             Expanded(
               flex: 3,
-              child: Center(
-                child: Text(
-                  "COURSE\n(State in Full / No Acronym)",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                    fontSize: 12,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+                child: Center(
+                  child: Text(
+                    "COURSE\n(State in Full / No Acronym)",
+                    textAlign: TextAlign.center,
+                    style: _headerStyle(),
                   ),
                 ),
               ),
             ),
             Expanded(
               flex: 2,
-              child: Center(
-                child: Text(
-                  "YEAR\nGRADUATED",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                    fontSize: 12,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0, bottom: 8.0),
+                child: Center(
+                  child: Text(
+                    "YEAR\nGRADUATED",
+                    textAlign: TextAlign.center,
+                    style: _headerStyle(),
                   ),
                 ),
               ),
             ),
             Expanded(
               flex: 4,
-              child: Center(
-                child: Text(
-                  "IF UNDERGRADUATE",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("IF UNDERGRADUATE", style: _headerStyle()),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Center(
+                            child: Text(
+                              "LEVEL\nREACHED",
+                              textAlign: TextAlign.center,
+                              style: _subHeaderStyle(),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            "YEAR LAST\nATTENDED",
+                            textAlign: TextAlign.center,
+                            style: _subHeaderStyle(),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ),
             ),
           ],
         ),
-        const Divider(color: Colors.black26),
-        // Bottom row of headers (for the split undergraduate section)
-        Row(
-          children: [
-            Expanded(
-              flex: 10,
-              child: const SizedBox(),
-            ), // Spacers to push to the right
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Text(
-                  "LEVEL\nREACHED",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Center(
-                child: Text(
-                  "YEAR LAST\nATTENDED",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const Divider(color: Colors.black54),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
+        const Divider(color: Colors.black26, thickness: 1.5),
 
         // --- ROW 1: ELEMENTARY ---
         _buildEducRow(
-          const Text(
+          levelWidget: const Text(
             "Elementary",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
-          _elemSchoolCtrl,
-          Container(
-            color: Colors.grey.shade300,
+          schoolCtrl: _elemSchoolCtrl,
+          courseWidget: Container(
+            height: 44, // Matches the height of TextFields
+            decoration: BoxDecoration(
+              color: const Color(0xFFE2E2E2),
+              borderRadius: BorderRadius.circular(4),
+            ),
             alignment: Alignment.center,
-            height: 48,
             child: const Text(
               "N/A",
               style: TextStyle(
@@ -200,22 +195,22 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
               ),
             ),
           ),
-          _elemYearGradCtrl,
-          _elemLevelCtrl,
-          _elemYearLastCtrl,
+          yearGradCtrl: _elemYearGradCtrl,
+          levelReachedCtrl: _elemLevelCtrl,
+          yearLastCtrl: _elemYearLastCtrl,
         ),
-        const Divider(),
+        const Divider(color: Colors.black12),
 
         // --- ROW 2: SECONDARY ---
         _buildEducRow(
-          Column(
+          levelWidget: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 "Secondary",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 8),
               _buildRadio(
                 "Non-K12",
                 "Non-K12",
@@ -230,63 +225,117 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
               ),
             ],
           ),
-          _secSchoolCtrl,
-          _buildGreyTextFieldController(_secCourseCtrl, hint: "Strand if K12:"),
-          _secYearGradCtrl,
-          _secLevelCtrl,
-          _secYearLastCtrl,
+          schoolCtrl: _secSchoolCtrl,
+          courseWidget: _buildGreyTextFieldController(
+            _secCourseCtrl,
+            hint: "Strand if K12:",
+          ),
+          yearGradCtrl: _secYearGradCtrl,
+          levelReachedCtrl: _secLevelCtrl,
+          yearLastCtrl: _secYearLastCtrl,
         ),
-        const Divider(),
+        const Divider(color: Colors.black12),
 
         // --- ROW 3: TERTIARY ---
         _buildEducRow(
-          const Text(
+          levelWidget: const Text(
             "Tertiary",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
-          _tertSchoolCtrl,
-          _buildGreyTextFieldController(_tertCourseCtrl),
-          _tertYearGradCtrl,
-          _tertLevelCtrl,
-          _tertYearLastCtrl,
+          schoolCtrl: _tertSchoolCtrl,
+          courseWidget: _buildGreyTextFieldController(_tertCourseCtrl),
+          yearGradCtrl: _tertYearGradCtrl,
+          levelReachedCtrl: _tertLevelCtrl,
+          yearLastCtrl: _tertYearLastCtrl,
         ),
-        const Divider(),
+        const Divider(color: Colors.black12),
 
         // --- ROW 4: GRADUATE STUDIES ---
         _buildEducRow(
-          const Text(
+          levelWidget: const Text(
             "Graduate Studies/\nPost-graduate",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
-          _gradSchoolCtrl,
-          _buildGreyTextFieldController(_gradCourseCtrl),
-          _gradYearGradCtrl,
-          _gradLevelCtrl,
-          _gradYearLastCtrl,
+          schoolCtrl: _gradSchoolCtrl,
+          courseWidget: _buildGreyTextFieldController(_gradCourseCtrl),
+          yearGradCtrl: _gradYearGradCtrl,
+          levelReachedCtrl: _gradLevelCtrl,
+          yearLastCtrl: _gradYearLastCtrl,
         ),
+        const Divider(color: Colors.black12),
 
+        const SizedBox(height: 30),
+
+        // ====================================
+        // BOTTOM BUTTON
+        // ====================================
         const SizedBox(height: 40),
+        const Divider(color: Colors.black12, thickness: 1),
+        const SizedBox(height: 16),
 
-        // --- SAVE BUTTON ---
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1D3A8A),
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton(
+              onPressed: () {
+                // Handle Back Action
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF3B82F6)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "CANCEL",
+                style: TextStyle(color: Color(0xFF3B82F6)),
+              ),
             ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Educational Background Saved!")),
-              );
-            },
-            child: const Text(
-              "Save Changes",
-              style: TextStyle(color: Colors.white, fontSize: 16),
+            const SizedBox(width: 16),
+            OutlinedButton(
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Training data saved!")),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: const Color(0xFF1D3A8A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                "SAVE CHANGES",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-          ),
+          ],
         ),
       ],
+    );
+  }
+
+  // Helper for Headers
+  TextStyle _headerStyle() {
+    return TextStyle(
+      fontWeight: FontWeight.bold,
+      color: Colors.grey.shade700,
+      fontSize: 12,
+    );
+  }
+
+  // Helper for Sub-Headers
+  TextStyle _subHeaderStyle() {
+    return TextStyle(
+      fontWeight: FontWeight.w600,
+      color: Colors.grey.shade600,
+      fontSize: 11,
     );
   }
 
@@ -297,66 +346,71 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
     String groupValue,
     Function(String?) onChanged,
   ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Radio<String>(
-          value: value,
-          groupValue: groupValue,
-          activeColor: const Color(0xFF1D3A8A), // primaryAccent equivalent
-          onChanged: onChanged,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        GestureDetector(
-          onTap: () => onChanged(value),
-          child: Text(
-            title,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+    return InkWell(
+      onTap: () => onChanged(value),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 28,
+            width: 28,
+            child: Radio<String>(
+              value: value,
+              groupValue: groupValue,
+              activeColor: const Color(0xFF1D3A8A),
+              onChanged: onChanged,
+            ),
           ),
-        ),
-      ],
+          Text(
+            title,
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
+          ),
+        ],
+      ),
     );
   }
 
-  // Helper for generating the Educational Background table rows
-  Widget _buildEducRow(
-    Widget levelWidget,
-    TextEditingController schoolCtrl,
-    Widget courseWidget,
-    TextEditingController yearGradCtrl,
-    TextEditingController levelReachedCtrl,
-    TextEditingController yearLastCtrl,
-  ) {
+  // Helper for generating the Educational Background table rows perfectly aligned
+  Widget _buildEducRow({
+    required Widget levelWidget,
+    required TextEditingController schoolCtrl,
+    required Widget courseWidget,
+    required TextEditingController yearGradCtrl,
+    required TextEditingController levelReachedCtrl,
+    required TextEditingController yearLastCtrl,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.only(right: 8.0, top: 10.0),
+              padding: const EdgeInsets.only(right: 8.0, top: 12.0),
               child: levelWidget,
             ),
           ),
           Expanded(
             flex: 3,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.only(right: 8.0),
               child: _buildGreyTextFieldController(schoolCtrl),
             ),
           ),
           Expanded(
             flex: 3,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.only(right: 8.0),
               child: courseWidget,
             ),
           ),
           Expanded(
             flex: 2,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              padding: const EdgeInsets.only(right: 8.0),
               child: _buildGreyTextFieldController(
                 yearGradCtrl,
                 isNumber: true,
@@ -364,20 +418,22 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
             ),
           ),
           Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: _buildGreyTextFieldController(levelReachedCtrl),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: _buildGreyTextFieldController(
-                yearLastCtrl,
-                isNumber: true,
-              ),
+            flex: 4,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: _buildGreyTextFieldController(levelReachedCtrl),
+                  ),
+                ),
+                Expanded(
+                  child: _buildGreyTextFieldController(
+                    yearLastCtrl,
+                    isNumber: true,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -385,28 +441,14 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 13,
-          color: Colors.black87,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  } // Updated text field builder to support hints and number keyboards
-
+  // Updated text field builder to guarantee consistent heights
   Widget _buildGreyTextFieldController(
     TextEditingController controller, {
-    IconData? icon,
     String? hint,
     bool isNumber = false,
   }) {
     return Container(
+      height: 44, // Fixed height keeps the tabular rows aligned
       decoration: BoxDecoration(
         color: const Color(0xFFE9ECEF),
         borderRadius: BorderRadius.circular(4),
@@ -415,16 +457,16 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
       child: TextFormField(
         controller: controller,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        style: const TextStyle(fontSize: 13),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey.shade500),
+          hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
+            horizontal: 12,
             vertical: 14,
           ),
           isDense: true,
-          suffixIcon: icon != null ? Icon(icon, color: Colors.black54) : null,
         ),
       ),
     );

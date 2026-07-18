@@ -46,17 +46,15 @@ class _ScreenSeekerProfileState extends State<ScreenSeekerProfile> {
   String _disability = "None";
 
   final List<String> _menuSteps = [
-    "Applicant name",
     "Personal information",
-    "Employment status",
+    "Employment status/type",
     "Job preferences",
-    "Language/dialects",
+    "Language/dialects proficiency",
     "Educational background",
-    "Certification/training",
-    "Eligibility/License",
+    "Technical/Vocational and Other Training",
+    "Eligibility/Professional License",
     "Work experience",
-    "Other skills",
-    "History of SPES/GIP Engagement",
+    "Other skills acquired without certificate",
   ];
 
   @override
@@ -213,7 +211,7 @@ class _ScreenSeekerProfileState extends State<ScreenSeekerProfile> {
               ),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1100),
+                  constraints: const BoxConstraints(maxWidth: 1300),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -398,24 +396,22 @@ class _ScreenSeekerProfileState extends State<ScreenSeekerProfile> {
           Padding(
             padding: const EdgeInsets.all(30.0),
             child: _currentStep == 0
-                ? _buildApplicantNameFields(user)
-                : _currentStep == 1
                 ? PersonalInformation(user: user)
-                : _currentStep == 2
+                : _currentStep == 1
                 ? EmploymentStatus(user: user)
-                : _currentStep == 3
+                : _currentStep == 2
                 ? JobPreferences(user: user)
-                : _currentStep == 4
+                : _currentStep == 3
                 ? LanguageDialect(user: user)
-                : _currentStep == 5
+                : _currentStep == 4
                 ? EducationalBackground(user: user)
-                : _currentStep == 6
+                : _currentStep == 5
                 ? CertificationTraining(user: user)
-                : _currentStep == 7
+                : _currentStep == 6
                 ? EligibilityLicense(user: user)
-                : _currentStep == 8
+                : _currentStep == 7
                 ? WorkExperience(user: user)
-                : _currentStep == 9
+                : _currentStep == 8
                 ? OtherSkills(user: user)
                 : const Center(
                     child: Text(
@@ -425,51 +421,6 @@ class _ScreenSeekerProfileState extends State<ScreenSeekerProfile> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildApplicantNameFields(Map<String, dynamic>? user) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildLabel("LAST NAME"),
-        _buildGreyTextField(user?['last_name']?.toUpperCase() ?? ""),
-
-        _buildLabel("FIRST NAME"),
-        _buildGreyTextField(user?['first_name']?.toUpperCase() ?? ""),
-
-        _buildLabel("MIDDLE NAME"),
-        _buildGreyTextField(
-          user?['middle_name']?.toUpperCase() ?? "NOT SPECIFIED",
-        ),
-        const Padding(
-          padding: EdgeInsets.only(top: 6.0, bottom: 8.0),
-          child: Text(
-            "Put hyphen (-) if not applicable",
-            style: TextStyle(fontSize: 12, color: Colors.black54),
-          ),
-        ),
-
-        _buildLabel("SUFFIX"),
-        _buildGreyTextField(user?['suffix'] ?? "NONE", isDropdown: true),
-
-        const SizedBox(height: 20),
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    "Profile Save functionality requires backend endpoint update.",
-                  ),
-                ),
-              );
-            },
-            child: const Text("Save Changes"),
-          ),
-        ),
-      ],
     );
   }
 
