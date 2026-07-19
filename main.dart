@@ -33,12 +33,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(   
       title: 'NEIS',
       theme: ThemeData( 
+        useMaterial3: true,
+        // This forces the app to use your local pubspec.yaml asset
+        fontFamily: 'Roboto', 
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
       // Set the Staff Dashboard as your temporary home screen to test it!
-      home: const ScreenHome(), 
+      home: const ScreenStaffLogin(), 
     );
   }
 }
 
+// "Naga Job: Job Vacancies Management System",
+// mark@gmail.com
+// a01b63a4
 //  node server.js

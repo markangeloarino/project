@@ -367,7 +367,11 @@ class _ScreenHomeState extends State<ScreenHome> {
     );
   }
 
-  Widget _buildJobCard(Map<String, dynamic> job) {
+ // The newly styled job card matching the mockup
+  Widget _buildJobCard(
+    Map<String, dynamic> job,
+  ) {
+    // Parse Date
     String formattedDate = 'Posted on N/A';
     if (job["date_posted"] != null) {
       try {
@@ -379,73 +383,85 @@ class _ScreenHomeState extends State<ScreenHome> {
       } catch (e) {}
     }
 
+    // Determine Status
+    String status = job['status'] ?? 'Active';
+    bool isClosed = status == 'Closed';
+
     return InkWell(
-      // NEW: Wraps the row to make it clickable
       onTap: () {
+        // You can add Navigator.push to ScreenJobDetails here
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ScreenJobDetails(job: job)),
+          MaterialPageRoute(
+            builder: (context) => ScreenJobDetails(job: job),
+          ),
         );
       },
-      child: Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFDEE2E6))),
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Image
+            // 1. Image Placeholder
             Container(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.black12),
-                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.grey.shade300),
               ),
-              child: const Icon(Icons.image_outlined, color: Colors.black26),
+              child: const Icon(
+                Icons.image_outlined,
+                size: 30,
+                color: Colors.grey,
+              ),
             ),
             const SizedBox(width: 20),
 
-            // 2. Middle: Title, Employer, and Aligned Table Row
+            // 2. Middle: Title, Employer, and even-distributed attributes
             Expanded(
               flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    (job["job_title"] ?? 'TITLE').toUpperCase(),
+                    (job['job_title'] ?? 'UNKNOWN TITLE').toUpperCase(),
                     style: const TextStyle(
-                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                       color: Colors.blue,
                     ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
-                    (job["employer_name"] ?? 'EMPLOYER').toUpperCase(),
+                    (job['employer_name'] ?? 'UNKNOWN EMPLOYER').toUpperCase(),
                     style: const TextStyle(
                       fontSize: 13,
                       color: Colors.blueAccent,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Distributed Bottom Row
+                  // Evenly distributed attribute row
                   Row(
                     children: [
                       Expanded(
                         child: _buildIconText(
                           Icons.location_on_outlined,
-                          job["location"] ?? 'Naga City',
+                          job['location'] ?? 'Naga City',
                         ),
                       ),
                       Expanded(
                         child: _buildIconText(
                           Icons.school_outlined,
-                          job["qualifications"] ?? 'Educ level not specified',
+                          job['qualifications'] ?? 'Educ level not specified',
                         ),
                       ),
                       Expanded(
                         child: _buildIconText(
                           Icons.description_outlined,
-                          job["employment_type"] ?? 'Job type not specified',
+                          job['employment_type'] ?? 'Job type not specified',
                         ),
                       ),
                     ],
@@ -454,19 +470,31 @@ class _ScreenHomeState extends State<ScreenHome> {
               ),
             ),
 
-            // 3. Right: Salary and Date (Perfectly aligned)
+            // 3. Right: Salary, Date, and Status (Perfectly aligned)
             Expanded(
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    job["salary"] ?? 'Salary not specified',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
+                  Row(
+                    children: [
+                       Text(
+                        '₱',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),  
+                      Text(
+                        job["salary"] ?? 'Salary not specified',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -487,6 +515,27 @@ class _ScreenHomeState extends State<ScreenHome> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  // --- JOB STATUS BADGE ---
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isClosed ? Colors.red.shade50 : Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: isClosed ? Colors.red.shade200 : Colors.green.shade200,
+                      ),
+                    ),
+                    child: Text(
+                      status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isClosed ? Colors.red.shade700 : Colors.green.shade700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -495,7 +544,6 @@ class _ScreenHomeState extends State<ScreenHome> {
       ),
     );
   }
-
   Widget _buildIconText(IconData icon, String text) {
     return Row(
       children: [

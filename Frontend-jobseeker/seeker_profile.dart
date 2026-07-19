@@ -202,8 +202,9 @@ class _ScreenSeekerProfileState extends State<ScreenSeekerProfile> {
           children: [
             // TOP SECTION: Profile Header
             _buildTopHeader(user),
-
-            // BOTTOM SECTION: Sidebar and Form
+            _buildLabel(
+              "INSTRUCTIONS: Please fill out the form legible in block letters. Do not leave any items unanswered. Indicate \"N/A\" if not applicable",
+            ), // BOTTOM SECTION: Sidebar and Form
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 20.0,

@@ -93,7 +93,8 @@ class _ScreenLoginState extends State<ScreenLogin> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const ScreenSeekerDashboard(),
+                                builder: (context) =>
+                                    const ScreenSeekerDashboard(),
                               ),
                             );
                           }
@@ -120,7 +121,7 @@ class _ScreenLoginState extends State<ScreenLogin> {
     );
   }
 
-   // ==========================================
+  // ==========================================
   // APP BAR (Dark Theme)
   // ==========================================
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -132,23 +133,19 @@ class _ScreenLoginState extends State<ScreenLogin> {
       titleSpacing: 0, // Removes default edge padding so it aligns perfectly
       centerTitle: true,
       title: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1200), // Matches the body container
+        constraints: const BoxConstraints(
+          maxWidth: 1200,
+        ), // Matches the body container
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0), // Matches body padding
+          padding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
+          ), // Matches body padding
           child: Row(
             children: [
               // Official Seals / Logos
-              Image.asset(
-                'assets/naga.png',
-                height: 70,
-                fit: BoxFit.contain,
-              ),
+              Image.asset('assets/naga.png', height: 70, fit: BoxFit.contain),
               const SizedBox(width: 10),
-              Image.asset(
-                'assets/peso.png',
-                height: 70,
-                fit: BoxFit.contain,
-              ),
+              Image.asset('assets/peso.png', height: 70, fit: BoxFit.contain),
               const SizedBox(width: 15),
               // Logo Text
               const Column(
@@ -169,33 +166,68 @@ class _ScreenLoginState extends State<ScreenLogin> {
               ),
               const Spacer(),
               // Nav Links
-              _buildNavLink("Home"),
-              _buildNavLink("Jobs"), 
+              _buildNavLink(
+                "Home",
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScreenHome()),
+                ),
+              ),
+              _buildNavLink(
+                "Jobs",
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ScreenHome()),
+                ),
+              ),
               const SizedBox(width: 20),
               // Action Buttons (Moved inside the ConstrainedBox)
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ScreenSignup()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ScreenSignup(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.yellow,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-                  side: const BorderSide(color: Colors.black,width: 2.0),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  side: const BorderSide(color: Colors.black, width: 2.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
                 ),
-                child: const Text("SIGN UP", style: TextStyle(color: Colors.black)),
+                child: const Text(
+                  "SIGN UP",
+                  style: TextStyle(color: Colors.black),
+                ),
               ),
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ScreenLogin()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ScreenLogin(),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
                 ),
-                child:   Text("LOGIN", style: TextStyle(color: Colors.white)),
+                child: Text("LOGIN", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -204,28 +236,35 @@ class _ScreenLoginState extends State<ScreenLogin> {
     );
   }
 
-  Widget _buildNavLink(String text, {bool isActive = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
+   Widget _buildNavLink(
+    String text,
+    VoidCallback onPressed, {
+    bool isActive = false,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              text,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
             ),
-          ),
-          if (isActive)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              height: 2,
-              width: 30,
-              color: Colors.black,
-            )
-        ],
+            if (isActive)
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                height: 2,
+                width: 30,
+                color: Colors.black,
+              ),
+          ],
+        ),
       ),
     );
   }

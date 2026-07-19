@@ -188,6 +188,18 @@ class _ScreenSignupState extends State<ScreenSignup> {
                         },
                         child: const Text("Register"),
                       ),
+
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ScreenLogin(),
+                      ),
+                    );
+                  },
+                  child: const Text("Already have an account? Sign here"),
+                ),
               ],
             ),
           ),

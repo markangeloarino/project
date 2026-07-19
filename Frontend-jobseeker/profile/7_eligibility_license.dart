@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-// --- DATA MODELS FOR DYNAMIC ROWS ---
+// --- DATA MODELS FOR STATIC ROWS ---
 class EligibilityRecord {
   final TextEditingController nameCtrl = TextEditingController();
   final TextEditingController dateCtrl = TextEditingController();
@@ -20,13 +24,124 @@ class EligibilityLicense extends StatefulWidget {
 }
 
 class _EligibilityLicenseState extends State<EligibilityLicense> {
-  // Initialize with one empty row for each section
-  final List<EligibilityRecord> _eligibilities = [EligibilityRecord()];
-  final List<LicenseRecord> _licenses = [LicenseRecord()];
+  // Initialize with exactly 3 rows for each section
+  final List<EligibilityRecord> _eligibilities = List.generate(3, (_) => EligibilityRecord());
+  final List<LicenseRecord> _licenses = List.generate(3, (_) => LicenseRecord());
+
+  bool _isLoading = false;
+  bool _isFetching = true;
+
+  // ==========================================
+  // INITIALIZE STATE & FETCH LATEST DATA
+  // ==========================================
+  @override
+  void initState() {
+    super.initState();
+    _loadEligibilityLicenseData();
+  }
+
+  Future<void> _loadEligibilityLicenseData() async {
+    final seekerId = widget.user?['seeker_id'];
+    if (seekerId == null) return;
+
+    try {
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/eligibilities-licenses');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List eligList = data['eligibilities'] ?? [];
+        final List licList = data['licenses'] ?? [];
+
+        if (mounted) {
+          setState(() {
+            // Populate up to 3 Eligibilities
+            for (int i = 0; i < eligList.length && i < 3; i++) {
+              _eligibilities[i].nameCtrl.text = eligList[i]['eligibility_name'] ?? '';
+              _eligibilities[i].dateCtrl.text = eligList[i]['date_taken'] ?? '';
+            }
+            // Populate up to 3 Licenses
+            for (int i = 0; i < licList.length && i < 3; i++) {
+              _licenses[i].nameCtrl.text = licList[i]['license_name'] ?? '';
+              _licenses[i].dateCtrl.text = licList[i]['valid_until'] ?? '';
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not load eligibilities/licenses."), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
+    }
+  }
+
+  // ==========================================
+  // HTTP POST TO DATABASE
+  // ==========================================
+  Future<void> _saveToDatabase() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final seekerId = widget.user?['seeker_id'];
+      if (seekerId == null) throw Exception("No logged-in user found.");
+
+      // Package only rows that have a name filled out
+      final List<Map<String, dynamic>> eligData = [];
+      for (var e in _eligibilities) {
+        if (e.nameCtrl.text.trim().isNotEmpty) {
+          eligData.add({
+            "eligibility_name": e.nameCtrl.text.trim(),
+            "date_taken": e.dateCtrl.text.trim(),
+          });
+        }
+      }
+
+      final List<Map<String, dynamic>> licData = [];
+      for (var l in _licenses) {
+        if (l.nameCtrl.text.trim().isNotEmpty) {
+          licData.add({
+            "license_name": l.nameCtrl.text.trim(),
+            "valid_until": l.dateCtrl.text.trim(),
+          });
+        }
+      }
+
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/eligibilities-licenses');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "eligibilities": eligData,
+          "licenses": licData
+        }),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data saved successfully!"), backgroundColor: Colors.green));
+        }
+      } else {
+        throw Exception("Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
-    // Dispose controllers to prevent memory leaks
     for (var e in _eligibilities) {
       e.nameCtrl.dispose();
       e.dateCtrl.dispose();
@@ -40,6 +155,13 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isFetching) {
+      return const Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,30 +170,6 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
         for (int i = 0; i < _eligibilities.length; i++)
           _buildEligibilityRow(i, _eligibilities[i]),
         
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: () {
-            setState(() {
-              _eligibilities.add(EligibilityRecord());
-            });
-          },
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF3B82F6)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          ),
-          child: const Text(
-            "ADD ELIGIBILITY",
-            style: TextStyle(
-              color: Color(0xFF3B82F6),
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-            ),
-          ),
-        ),
-
         const SizedBox(height: 32),
 
         // --- LICENSE SECTION ---
@@ -79,38 +177,11 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
         for (int i = 0; i < _licenses.length; i++)
           _buildLicenseRow(i, _licenses[i]),
           
-        const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: () {
-            setState(() {
-              _licenses.add(LicenseRecord());
-            });
-          },
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFF3B82F6)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          ),
-          child: const Text(
-            "ADD LICENSE",
-            style: TextStyle(
-              color: Color(0xFF3B82F6),
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-            ),
-          ),
-        ),
-
         const SizedBox(height: 40),
-        const Divider(color: Colors.black12, thickness: 1),
-        const SizedBox(height: 16),
 
-       // ====================================
+        // ====================================
         // BOTTOM BUTTON
         // ====================================
-        const SizedBox(height: 40),
         const Divider(color: Colors.black12, thickness: 1),
         const SizedBox(height: 16),
 
@@ -118,7 +189,7 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             OutlinedButton(
-              onPressed: () {
+              onPressed: _isLoading ? null : () {
                 // Handle Back Action
               },
               style: OutlinedButton.styleFrom(
@@ -138,9 +209,7 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
             ),
             const SizedBox(width: 16),
             OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Training data saved!")),
-              ),
+              onPressed: _isLoading ? null : _saveToDatabase,
               style: OutlinedButton.styleFrom(
                 backgroundColor: const Color(0xFF1D3A8A),
                 shape: RoundedRectangleBorder(
@@ -151,10 +220,19 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
                   vertical: 16,
                 ),
               ),
-              child: const Text(
-                "SAVE CHANGES",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "SAVE CHANGES",
+                      style: TextStyle(color: Colors.white),
+                    ),
             ),
           ],
         ),
@@ -248,6 +326,7 @@ class _EligibilityLicenseState extends State<EligibilityLicense> {
     bool isNumber = false,
   }) {
     return Container(
+      height: 44,
       decoration: BoxDecoration(
         color: const Color(0xFFE9ECEF),
         borderRadius: BorderRadius.circular(4),

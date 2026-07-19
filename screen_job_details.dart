@@ -55,33 +55,7 @@ class ScreenJobDetails extends StatelessWidget {
                             "Qualifications",
                             job['qualifications'] ?? 'No qualifications.',
                             null,
-                          ),
-
-                          // NEW: Additional Meta Details
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildContentCard(
-                                  "Industry",
-                                  job['industry'] ?? 'N/A',
-                                  null,
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: _buildContentCard(
-                                  "Job Scope",
-                                  job['job_location_type'] ?? 'N/A',
-                                  null,
-                                ),
-                              ),
-                            ],
-                          ),
-                          _buildContentCard(
-                            "Employment Type",
-                            job['employment_type'] ?? 'N/A',
-                            null,
-                          ),
+                          ),  
                         ],
                       ),
                     ),
@@ -155,9 +129,22 @@ class ScreenJobDetails extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  job['location'] ?? 'Location not specified',
-                  style: const TextStyle(fontSize: 14),
+                Row(crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: Colors.black87,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        job['location'] ?? 'Location not specified',
+                        style: const TextStyle(fontSize: 14),
+                        softWrap: true, //
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -232,7 +219,7 @@ class ScreenJobDetails extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Job Stats
+          // Job Stats (rest of your sidebar items...)
           _buildSidebarItem(
             "Years of Experience",
             job['years_experience']?.toString() ?? '0',
@@ -242,7 +229,13 @@ class ScreenJobDetails extends StatelessWidget {
             "Vacancies",
             job['vacancies_count']?.toString() ?? '1',
           ),
-          _buildSidebarItem("Job Status", job['status'] ?? 'Active'),
+          // _buildSidebarItem("Job Status", currentStatus),
+          _buildSidebarItem(
+            "Job Scope",
+            job['job_location_type'] ?? 'N/A',
+          ),
+          _buildSidebarItem("Job Type", job['employment_type'] ?? 'N/A'),
+
 
           const Divider(height: 30),
 

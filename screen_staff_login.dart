@@ -26,7 +26,7 @@ class _ScreenStaffLoginState extends State<ScreenStaffLogin> {
 
     return Scaffold(
       // Set the requested background color
-      backgroundColor: const Color(0xFF23367A),
+      backgroundColor: const Color.fromARGB(255, 44, 67, 151),
       body: Center(
         child: SingleChildScrollView(
           child: Column(

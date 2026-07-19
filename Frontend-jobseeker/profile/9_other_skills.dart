@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class OtherSkills extends StatefulWidget {
   final Map<String, dynamic>? user;
@@ -31,8 +35,118 @@ class _OtherSkillsState extends State<OtherSkills> {
   };
   final TextEditingController _othersSkillCtrl = TextEditingController();
 
+  bool _isLoading = false;
+  bool _isFetching = true;
+
+  // ==========================================
+  // INITIALIZE STATE & FETCH LATEST DATA
+  // ==========================================
+  @override
+  void initState() {
+    super.initState();
+    _loadSkillsData();
+  }
+
+  Future<void> _loadSkillsData() async {
+    final seekerId = widget.user?['seeker_id'];
+    if (seekerId == null) return;
+
+    try {
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/other-skills');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data.isNotEmpty && mounted) {
+          setState(() {
+            _othersSkillCtrl.text = data['others_specify'] ?? '';
+            
+            // Read the saved string (e.g. "Auto Mechanic, Driver, Plumber")
+            final String savedSkills = data['skills_list'] ?? '';
+            final List<String> savedSkillsList = savedSkills.split(', ').map((e) => e.trim()).toList();
+
+            // Set the checkboxes to true if they match the saved string
+            for (String skill in _skills.keys.toList()) {
+              _skills[skill] = savedSkillsList.contains(skill);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not load other skills."), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
+    }
+  }
+
+  // ==========================================
+  // HTTP POST TO DATABASE
+  // ==========================================
+  Future<void> _saveToDatabase() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final seekerId = widget.user?['seeker_id'];
+      if (seekerId == null) throw Exception("No logged-in user found.");
+
+      // Package all true checkboxes into a single comma-separated string
+      final List<String> selectedSkills = _skills.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
+      final String skillsListString = selectedSkills.join(', ');
+
+      final Map<String, dynamic> formData = {
+        "skills_list": skillsListString,
+        "others_specify": _othersSkillCtrl.text.trim(),
+      };
+
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/other-skills');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(formData),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Other Skills saved successfully!"), backgroundColor: Colors.green));
+        }
+      } else {
+        throw Exception("Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _othersSkillCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isFetching) {
+      return const Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -76,7 +190,7 @@ class _OtherSkillsState extends State<OtherSkills> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             OutlinedButton(
-              onPressed: () {
+              onPressed: _isLoading ? null : () {
                 // Handle Back Action
               },
               style: OutlinedButton.styleFrom(
@@ -96,9 +210,7 @@ class _OtherSkillsState extends State<OtherSkills> {
             ),
             const SizedBox(width: 16),
             OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Training data saved!")),
-              ),
+              onPressed: _isLoading ? null : _saveToDatabase,
               style: OutlinedButton.styleFrom(
                 backgroundColor: const Color(0xFF1D3A8A),
                 shape: RoundedRectangleBorder(
@@ -109,10 +221,19 @@ class _OtherSkillsState extends State<OtherSkills> {
                   vertical: 16,
                 ),
               ),
-              child: const Text(
-                "SAVE CHANGES",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "SAVE CHANGES",
+                      style: TextStyle(color: Colors.white),
+                    ),
             ),
           ],
         ),
@@ -160,7 +281,7 @@ class _OtherSkillsState extends State<OtherSkills> {
         ),
       ),
     );
-  } // Updated text field builder to support hints and number keyboards
+  } 
 
   Widget _buildGreyTextFieldController(
     TextEditingController controller, {

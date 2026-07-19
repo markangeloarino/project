@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class EducationalBackground extends StatefulWidget {
   final Map<String, dynamic>? user;
@@ -40,8 +44,138 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
   final TextEditingController _gradLevelCtrl = TextEditingController();
   final TextEditingController _gradYearLastCtrl = TextEditingController();
 
+  bool _isLoading = false;
+  bool _isFetching = true;
+
+  // ==========================================
+  // INITIALIZE STATE & FETCH LATEST DATA
+  // ==========================================
+  @override
+  void initState() {
+    super.initState();
+    _loadEducationData();
+  }
+
+  Future<void> _loadEducationData() async {
+    final seekerId = widget.user?['seeker_id'];
+    if (seekerId == null) return;
+
+    try {
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/educational-background');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data.isNotEmpty && mounted) {
+          setState(() {
+            _currentlyInSchool = data['currently_in_school'] ?? "No";
+            _secondaryType = data['secondary_type'] ?? "K12";
+
+            // Elementary
+            _elemSchoolCtrl.text = data['elem_school'] ?? '';
+            _elemYearGradCtrl.text = data['elem_year_grad'] ?? '';
+            _elemLevelCtrl.text = data['elem_level'] ?? '';
+            _elemYearLastCtrl.text = data['elem_year_last'] ?? '';
+
+            // Secondary
+            _secSchoolCtrl.text = data['sec_school'] ?? '';
+            _secCourseCtrl.text = data['sec_course'] ?? '';
+            _secYearGradCtrl.text = data['sec_year_grad'] ?? '';
+            _secLevelCtrl.text = data['sec_level'] ?? '';
+            _secYearLastCtrl.text = data['sec_year_last'] ?? '';
+
+            // Tertiary
+            _tertSchoolCtrl.text = data['tert_school'] ?? '';
+            _tertCourseCtrl.text = data['tert_course'] ?? '';
+            _tertYearGradCtrl.text = data['tert_year_grad'] ?? '';
+            _tertLevelCtrl.text = data['tert_level'] ?? '';
+            _tertYearLastCtrl.text = data['tert_year_last'] ?? '';
+
+            // Graduate
+            _gradSchoolCtrl.text = data['grad_school'] ?? '';
+            _gradCourseCtrl.text = data['grad_course'] ?? '';
+            _gradYearGradCtrl.text = data['grad_year_grad'] ?? '';
+            _gradLevelCtrl.text = data['grad_level'] ?? '';
+            _gradYearLastCtrl.text = data['grad_year_last'] ?? '';
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not load educational background."), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
+    }
+  }
+
+  // ==========================================
+  // HTTP POST TO DATABASE
+  // ==========================================
+  Future<void> _saveToDatabase() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final seekerId = widget.user?['seeker_id'];
+      if (seekerId == null) throw Exception("No logged-in user found.");
+
+      final Map<String, dynamic> formData = {
+        "currently_in_school": _currentlyInSchool,
+        "secondary_type": _secondaryType,
+        
+        "elem_school": _elemSchoolCtrl.text.trim(), "elem_year_grad": _elemYearGradCtrl.text.trim(), "elem_level": _elemLevelCtrl.text.trim(), "elem_year_last": _elemYearLastCtrl.text.trim(),
+        "sec_school": _secSchoolCtrl.text.trim(), "sec_course": _secCourseCtrl.text.trim(), "sec_year_grad": _secYearGradCtrl.text.trim(), "sec_level": _secLevelCtrl.text.trim(), "sec_year_last": _secYearLastCtrl.text.trim(),
+        "tert_school": _tertSchoolCtrl.text.trim(), "tert_course": _tertCourseCtrl.text.trim(), "tert_year_grad": _tertYearGradCtrl.text.trim(), "tert_level": _tertLevelCtrl.text.trim(), "tert_year_last": _tertYearLastCtrl.text.trim(),
+        "grad_school": _gradSchoolCtrl.text.trim(), "grad_course": _gradCourseCtrl.text.trim(), "grad_year_grad": _gradYearGradCtrl.text.trim(), "grad_level": _gradLevelCtrl.text.trim(), "grad_year_last": _gradYearLastCtrl.text.trim(),
+      };
+
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/educational-background');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(formData),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Educational Background saved!"), backgroundColor: Colors.green));
+        }
+      } else {
+        throw Exception("Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _elemSchoolCtrl.dispose(); _elemYearGradCtrl.dispose(); _elemLevelCtrl.dispose(); _elemYearLastCtrl.dispose();
+    _secSchoolCtrl.dispose(); _secCourseCtrl.dispose(); _secYearGradCtrl.dispose(); _secLevelCtrl.dispose(); _secYearLastCtrl.dispose();
+    _tertSchoolCtrl.dispose(); _tertCourseCtrl.dispose(); _tertYearGradCtrl.dispose(); _tertLevelCtrl.dispose(); _tertYearLastCtrl.dispose();
+    _gradSchoolCtrl.dispose(); _gradCourseCtrl.dispose(); _gradYearGradCtrl.dispose(); _gradLevelCtrl.dispose(); _gradYearLastCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isFetching) {
+      return const Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -78,7 +212,6 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
         const SizedBox(height: 8),
 
         // --- TABLE HEADERS ---
-        // Using a unified Row structure so flex values match the data rows perfectly
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -277,7 +410,7 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             OutlinedButton(
-              onPressed: () {
+              onPressed: _isLoading ? null : () {
                 // Handle Back Action
               },
               style: OutlinedButton.styleFrom(
@@ -297,9 +430,7 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
             ),
             const SizedBox(width: 16),
             OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Training data saved!")),
-              ),
+              onPressed: _isLoading ? null : _saveToDatabase,
               style: OutlinedButton.styleFrom(
                 backgroundColor: const Color(0xFF1D3A8A),
                 shape: RoundedRectangleBorder(
@@ -310,10 +441,19 @@ class _EducationalBackgroundState extends State<EducationalBackground> {
                   vertical: 16,
                 ),
               ),
-              child: const Text(
-                "SAVE CHANGES",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "SAVE CHANGES",
+                      style: TextStyle(color: Colors.white),
+                    ),
             ),
           ],
         ),

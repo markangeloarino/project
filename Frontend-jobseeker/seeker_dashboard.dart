@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:neis_cap/Frontend-jobposting/post_vacancy_provider.dart';
 import 'package:neis_cap/Frontend-jobseeker/seeker_profile.dart';
 import 'package:neis_cap/Frontend-jobseeker/seeker_job_details.dart';
-import 'package:neis_cap/auth_provider.dart'; 
+import 'package:neis_cap/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../screen_login.dart';
 
@@ -181,7 +181,7 @@ class _ScreenSeekerDashboardState extends State<ScreenSeekerDashboard> {
 
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
+          constraints: const BoxConstraints(maxWidth: 1300),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -226,7 +226,7 @@ class _ScreenSeekerDashboardState extends State<ScreenSeekerDashboard> {
                     child: Row(
                       children: [
                         _buildTabDashboard("Browse more jobs", 0),
-                        _buildTabDashboard("Job applications", 1),
+                        _buildTabDashboard("My applications", 1),
                       ],
                     ),
                   ),
@@ -448,6 +448,10 @@ class _ScreenSeekerDashboardState extends State<ScreenSeekerDashboard> {
       } catch (e) {}
     }
 
+    // Determine Status
+    String status = job['status'] ?? 'Active';
+    bool isClosed = status == 'Closed';
+
     return InkWell(
       onTap: () {
         // You can add Navigator.push to ScreenJobDetails here
@@ -531,19 +535,31 @@ class _ScreenSeekerDashboardState extends State<ScreenSeekerDashboard> {
               ),
             ),
 
-            // 3. Right: Salary and Date (Perfectly aligned)
+            // 3. Right: Salary, Date, and Status (Perfectly aligned)
             Expanded(
               flex: 1,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    job["salary"] ?? 'Salary not specified',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '₱',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        job["salary"] ?? 'Salary not specified',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -563,6 +579,36 @@ class _ScreenSeekerDashboardState extends State<ScreenSeekerDashboard> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  // --- JOB STATUS BADGE ---
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isClosed
+                          ? Colors.red.shade50
+                          : Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: isClosed
+                            ? Colors.red.shade200
+                            : Colors.green.shade200,
+                      ),
+                    ),
+                    child: Text(
+                      status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isClosed
+                            ? Colors.red.shade700
+                            : Colors.green.shade700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                 ],
               ),

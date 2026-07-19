@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 // --- DATA MODEL FOR DYNAMIC ROWS ---
 class WorkExperienceRecord {
@@ -19,15 +23,114 @@ class WorkExperience extends StatefulWidget {
 }
 
 class _WorkExperienceState extends State<WorkExperience> {
-  // Initializing with 4 rows to perfectly match the provided design image
+  // Initializing with exactly 3 rows as requested
   final List<WorkExperienceRecord> _workExperiences = List.generate(
-    4,
+    3,
     (_) => WorkExperienceRecord(),
   );
 
+  bool _isLoading = false;
+  bool _isFetching = true;
+
+  // ==========================================
+  // INITIALIZE STATE & FETCH LATEST DATA
+  // ==========================================
+  @override
+  void initState() {
+    super.initState();
+    _loadWorkData();
+  }
+
+  Future<void> _loadWorkData() async {
+    final seekerId = widget.user?['seeker_id'];
+    if (seekerId == null) return;
+
+    try {
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/work-experiences');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        
+        if (mounted) {
+          setState(() {
+            // Populate up to 3 rows based on database records
+            for (int i = 0; i < data.length && i < 3; i++) {
+              _workExperiences[i].companyCtrl.text = data[i]['company_name'] ?? '';
+              _workExperiences[i].addressCtrl.text = data[i]['address'] ?? '';
+              _workExperiences[i].positionCtrl.text = data[i]['position'] ?? '';
+              _workExperiences[i].dateFromCtrl.text = data[i]['date_from'] ?? '';
+              _workExperiences[i].dateToCtrl.text = data[i]['date_to'] ?? '';
+              _workExperiences[i].statusCtrl.text = data[i]['status'] ?? '';
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not load work experience."), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFetching = false);
+    }
+  }
+
+  // ==========================================
+  // HTTP POST TO DATABASE
+  // ==========================================
+  Future<void> _saveToDatabase() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final seekerId = widget.user?['seeker_id'];
+      if (seekerId == null) throw Exception("No logged-in user found.");
+
+      // Package only the rows that have a company name filled out
+      final List<Map<String, dynamic>> workData = [];
+      for (var record in _workExperiences) {
+        if (record.companyCtrl.text.trim().isNotEmpty) {
+          workData.add({
+            "company_name": record.companyCtrl.text.trim(),
+            "address": record.addressCtrl.text.trim(),
+            "position": record.positionCtrl.text.trim(),
+            "date_from": record.dateFromCtrl.text.trim(),
+            "date_to": record.dateToCtrl.text.trim(),
+            "status": record.statusCtrl.text.trim(),
+          });
+        }
+      }
+
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/work-experiences');
+
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"experiences": workData}),
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Work Experience saved!"), backgroundColor: Colors.green));
+        }
+      } else {
+        throw Exception("Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
-    // Dispose dynamic controllers to prevent memory leaks
     for (var record in _workExperiences) {
       record.companyCtrl.dispose();
       record.addressCtrl.dispose();
@@ -41,6 +144,13 @@ class _WorkExperienceState extends State<WorkExperience> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isFetching) {
+      return const Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -142,7 +252,7 @@ class _WorkExperienceState extends State<WorkExperience> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             OutlinedButton(
-              onPressed: () {
+              onPressed: _isLoading ? null : () {
                 // Handle Back Action
               },
               style: OutlinedButton.styleFrom(
@@ -162,9 +272,7 @@ class _WorkExperienceState extends State<WorkExperience> {
             ),
             const SizedBox(width: 16),
             OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Training data saved!")),
-              ),
+              onPressed: _isLoading ? null : _saveToDatabase,
               style: OutlinedButton.styleFrom(
                 backgroundColor: const Color(0xFF1D3A8A),
                 shape: RoundedRectangleBorder(
@@ -175,10 +283,19 @@ class _WorkExperienceState extends State<WorkExperience> {
                   vertical: 16,
                 ),
               ),
-              child: const Text(
-                "SAVE CHANGES",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "SAVE CHANGES",
+                      style: TextStyle(color: Colors.white),
+                    ),
             ),
           ],
         ),
@@ -192,7 +309,6 @@ class _WorkExperienceState extends State<WorkExperience> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Company Field
           Expanded(
             flex: 4,
             child: Padding(
@@ -200,8 +316,6 @@ class _WorkExperienceState extends State<WorkExperience> {
               child: _buildGreyTextFieldController(record.companyCtrl),
             ),
           ),
-
-          // Address Field
           Expanded(
             flex: 4,
             child: Padding(
@@ -209,8 +323,6 @@ class _WorkExperienceState extends State<WorkExperience> {
               child: _buildGreyTextFieldController(record.addressCtrl),
             ),
           ),
-
-          // Position Field
           Expanded(
             flex: 4,
             child: Padding(
@@ -218,8 +330,6 @@ class _WorkExperienceState extends State<WorkExperience> {
               child: _buildGreyTextFieldController(record.positionCtrl),
             ),
           ),
-
-          // Dates Field Split ("From" and "To")
           Expanded(
             flex: 4,
             child: Row(
@@ -245,8 +355,6 @@ class _WorkExperienceState extends State<WorkExperience> {
               ],
             ),
           ),
-
-          // Status Field
           Expanded(
             flex: 3,
             child: _buildGreyTextFieldController(record.statusCtrl),
@@ -256,7 +364,6 @@ class _WorkExperienceState extends State<WorkExperience> {
     );
   }
 
-  // Header Typography Style
   TextStyle _headerStyle() {
     return TextStyle(
       fontWeight: FontWeight.bold,
@@ -285,7 +392,7 @@ class _WorkExperienceState extends State<WorkExperience> {
     String? hint,
   }) {
     return Container(
-      height: 44, // Hard-locked height to guarantee perfect horizontal row alignment
+      height: 44, 
       decoration: BoxDecoration(
         color: const Color(0xFFE9ECEF),
         borderRadius: BorderRadius.circular(4),

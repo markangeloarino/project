@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class EmploymentStatus extends StatefulWidget {
   final Map<String, dynamic>? user;
@@ -11,9 +15,7 @@ class EmploymentStatus extends StatefulWidget {
 class _EmploymentStatusState extends State<EmploymentStatus> {
   // --- EMPLOYMENT STATUS CONTROLLERS & STATE ---
   String _mainEmploymentStatus = "Unemployed";
-  // "Employed" or "Unemployed"
   String _employedCategory = "Employed";
-  // "Employed" or "Self-Employed"
   String _selfEmployedType = "";
   final TextEditingController _selfEmployedOthersCtrl = TextEditingController();
   final TextEditingController _monthsLookingCtrl = TextEditingController();
@@ -31,8 +33,159 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
   String _is4ps = "No";
   final TextEditingController _fourpsIdCtrl = TextEditingController();
 
+  bool _isLoading = false;
+  bool _isFetching = true; // Added to handle initial data load
+
+  // ==========================================
+  // INITIALIZE STATE & FETCH LATEST DATA
+  // ==========================================
+  @override
+  void initState() {
+    super.initState();
+    _loadEmploymentData();
+  }
+
+  Future<void> _loadEmploymentData() async {
+    final seekerId = widget.user?['seeker_id'];
+    if (seekerId == null) return;
+
+    try {
+      final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/employment-status');
+
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data.isNotEmpty && mounted) {
+          setState(() {
+            _mainEmploymentStatus = data['main_status'] ?? "Unemployed";
+            _employedCategory = data['employed_category'] ?? "Employed";
+            _selfEmployedType = data['self_employed_type'] ?? "";
+            _selfEmployedOthersCtrl.text = data['self_employed_others'] ?? "";
+            _monthsLookingCtrl.text = data['months_looking']?.toString() ?? "";
+            _unemployedReason = data['unemployed_reason'] ?? "";
+            _unemployedCountryCtrl.text = data['unemployed_country'] ?? "";
+            _unemployedOthersCtrl.text = data['unemployed_others'] ?? "";
+            _isOfw = data['is_ofw'] ?? "No";
+            _ofwCountryCtrl.text = data['ofw_country'] ?? "";
+            _isFormerOfw = data['is_former_ofw'] ?? "No";
+            _formerOfwCountryCtrl.text = data['former_ofw_country'] ?? "";
+            _formerOfwReturnCtrl.text = data['former_ofw_return'] ?? "";
+            _hasOfwFamily = data['has_ofw_family'] ?? "No";
+            _ofwFamilyMember = data['ofw_family_member'] ?? "";
+            _ofwFamilyCountryCtrl.text = data['ofw_family_country'] ?? "";
+            _is4ps = data['is_4ps'] ?? "No";
+            _fourpsIdCtrl.text = data['fourps_id'] ?? "";
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not load saved employment data."), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetching = false;
+        });
+      }
+    }
+  }
+
+  // ==========================================
+  // HTTP POST TO DATABASE
+  // ==========================================
+  Future<void> _saveToDatabase() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final seekerId = widget.user?['seeker_id'];
+      if (seekerId == null) throw Exception("No logged-in user found.");
+
+      final Map<String, dynamic> formData = {
+        "main_status": _mainEmploymentStatus,
+        "employed_category": _employedCategory,
+        "self_employed_type": _selfEmployedType,
+        "self_employed_others": _selfEmployedOthersCtrl.text.trim(),
+        "months_looking": int.tryParse(_monthsLookingCtrl.text.trim()),
+        "unemployed_reason": _unemployedReason,
+        "unemployed_country": _unemployedCountryCtrl.text.trim(),
+        "unemployed_others": _unemployedOthersCtrl.text.trim(),
+        "is_ofw": _isOfw,
+        "ofw_country": _ofwCountryCtrl.text.trim(),
+        "is_former_ofw": _isFormerOfw,
+        "former_ofw_country": _formerOfwCountryCtrl.text.trim(),
+        "former_ofw_return": _formerOfwReturnCtrl.text.trim(),
+        "has_ofw_family": _hasOfwFamily,
+        "ofw_family_member": _ofwFamilyMember,
+        "ofw_family_country": _ofwFamilyCountryCtrl.text.trim(),
+        "is_4ps": _is4ps,
+        "fourps_id": _fourpsIdCtrl.text.trim(),
+      };
+
+      final String baseUrl = kIsWeb
+          ? 'http://localhost:3000'
+          : 'http://10.0.2.2:3000';
+      final url = Uri.parse('$baseUrl/api/seekers/$seekerId/employment-status');
+
+      final response = await http
+          .post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode(formData),
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Employment Status saved!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception("Status: ${response.statusCode}");
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _selfEmployedOthersCtrl.dispose();
+    _monthsLookingCtrl.dispose();
+    _unemployedCountryCtrl.dispose();
+    _unemployedOthersCtrl.dispose();
+    _ofwCountryCtrl.dispose();
+    _formerOfwCountryCtrl.dispose();
+    _formerOfwReturnCtrl.dispose();
+    _ofwFamilyCountryCtrl.dispose();
+    _fourpsIdCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isFetching) {
+      return const Padding(
+        padding: EdgeInsets.all(40.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -41,7 +194,7 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // LEFT COLUMN: EMPLOYED
-            Expanded( 
+            Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -440,9 +593,7 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             OutlinedButton(
-              onPressed: () {
-                // Handle Back Action
-              },
+              onPressed: _isLoading ? null : () {},
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFF3B82F6)),
                 shape: RoundedRectangleBorder(
@@ -460,9 +611,7 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
             ),
             const SizedBox(width: 16),
             OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Training data saved!")),
-              ),
+              onPressed: _isLoading ? null : _saveToDatabase,
               style: OutlinedButton.styleFrom(
                 backgroundColor: const Color(0xFF1D3A8A),
                 shape: RoundedRectangleBorder(
@@ -473,10 +622,19 @@ class _EmploymentStatusState extends State<EmploymentStatus> {
                   vertical: 16,
                 ),
               ),
-              child: const Text(
-                "SAVE CHANGES",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "SAVE CHANGES",
+                      style: TextStyle(color: Colors.white),
+                    ),
             ),
           ],
         ),
